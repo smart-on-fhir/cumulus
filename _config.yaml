@@ -1,0 +1,7 @@
+theme: jekyll-theme-slate
+title: Cumulus
+plugins:
+  - github-pages
+  - jekyll-remote-theme
+github:
+  is_project_page: false # disables big github banner at top of page

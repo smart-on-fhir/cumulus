@@ -1,5 +1,3 @@
-# Cumulus
-
 **A Universal Sidecar for a SMART Learning Healthcare System.**
 
 Cumulus builds from existing standards and open health IT tools to offer turnkey functions to
