@@ -1,0 +1,3 @@
+[submodule "sources/cumulus-library-core"]
+	path = sources/cumulus-library-core
+	url = https://github.com/smart-on-fhir/cumulus-library-core

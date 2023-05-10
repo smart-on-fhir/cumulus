@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "jekyll-theme-slate"
+gem "just-the-docs"
 gem "webrick" # necessary for "jekyll serve"
 
 group :jekyll_plugins do

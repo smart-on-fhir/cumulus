@@ -1,0 +1,4 @@
+title: Cumulus
+theme: just-the-docs
+plugins:
+  - github-pages
