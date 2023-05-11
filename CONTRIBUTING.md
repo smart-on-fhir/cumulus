@@ -10,7 +10,8 @@ This way, docs can update as code changes more easily.
 
 - Every time this repo is updated, the documentation is rebuilt.
 - It can also be rebuilt manually in GitHub.
-- But mostly, it will be updated when other project repos sends it a GitHub event,
+- But mostly, it will be updated when other project repos
+  [send it a GitHub event](https://github.com/smart-on-fhir/cumulus-library-core/blob/main/.github/workflows/pages.yaml),
   to rebuild docs.
 
 # Conventions for repo documentation

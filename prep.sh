@@ -53,6 +53,6 @@ while getopts ":d" option; do
    esac
 done
 
-git submodule update --init
+git submodule update --init --remote
 
 copy_docs cumulus-library-core library 1
