@@ -11,7 +11,7 @@ This way, docs can update as code changes more easily.
 - Every time this repo is updated, the documentation is rebuilt.
 - It can also be rebuilt manually in GitHub.
 - But mostly, it will be updated when other project repos
-  [send it a GitHub event](https://github.com/smart-on-fhir/cumulus-library-core/blob/main/.github/workflows/pages.yaml),
+  [send it a GitHub event](https://github.com/smart-on-fhir/cumulus-library/blob/main/.github/workflows/pages.yaml),
   to rebuild docs.
 
 # Conventions for repo documentation
@@ -31,6 +31,7 @@ This way, docs can update as code changes more easily.
   - When linking to other docs _outside_ your repo, only link to the following URLs,
     that we promise will exist:
     - https://docs.smarthealthit.org/cumulus/
+    - https://docs.smarthealthit.org/cumulus/etl/
     - https://docs.smarthealthit.org/cumulus/library/
   - That rule is designed to allow each repo to move files around at will, without breaking the
     world. But don't rename files willy-nilly, since any links out there on the web or user
@@ -56,7 +57,7 @@ It is safe to run multiple times, but only needs to be done once.
 
 ## Testing local changes in a different repo
 
-If you change docs in one of our source repos (like `cumulus-library-core`),
+If you change docs in one of our source repos (like `cumulus-library`),
 you may want to see how they look before pushing them up.
 
 Simply run `prep.sh -d` (dev mode) to pull documents from local checkouts

@@ -55,4 +55,6 @@ done
 
 git submodule update --init --remote
 
-copy_docs cumulus-library-core library 1
+# Only use nav_order 10-20 for submodules
+copy_docs cumulus-etl etl 10
+copy_docs cumulus-library library 11
