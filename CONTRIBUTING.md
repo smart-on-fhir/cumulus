@@ -37,3 +37,26 @@ This way, docs can update as code changes more easily.
 - Consider audience & tone when editing docs, to help keep a uniform writing style.
   - It can be helpful to consider what [sort of document](https://diataxis.fr/) you
     are writing.
+
+# Building the docs
+
+1. Install jekyll: https://jekyllrb.com/docs/installation/
+1. `gem install builder`
+1. Clone this repo and get inside it
+1. `builder install`
+1. `./prep.sh`
+1. `./serve.sh`
+1. Visit http://localhost:4000
+
+The `prep.sh` command pulls in the external submodules that the build relies upon.
+It is safe to run multiple times, but only needs to be done once.
+
+`serve.sh` builds all the prepped docs and runs a local server for testing.
+
+## Testing local changes in a different repo
+
+If you change docs in one of our source repos (like `cumulus-library-core`),
+you may want to see how they look before pushing them up.
+
+Simply run `prep.sh -d` (dev mode) to pull documents from local checkouts
+(as long as they are siblings of this repo) instead of the git submodules.
