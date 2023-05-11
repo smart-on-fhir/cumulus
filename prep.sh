@@ -10,10 +10,21 @@ DOCS=$ROOT/docs
 DEFAULT_SOURCE=sources
 SOURCE=$DEFAULT_SOURCE
 
+set_nav_order()
+{
+  FILE=$1
+  ORDER=$2
+
+  # Assume they'll have a title, because they kind of need to
+  sed -i "s/^title:/nav_order: $ORDER\ntitle:/" $FILE
+}
+
 copy_docs()
 {
   REPO=$1
   TARGET=$2
+  ORDER=$3
+
   REPO_PATH=$SOURCE/$REPO
   TARGET_PATH=$DOCS/$TARGET
 
@@ -28,7 +39,10 @@ copy_docs()
   rm -rf $TARGET_PATH
   mkdir -p $TARGET_PATH
   cp -r $REPO_PATH/docs/* $TARGET_PATH
+
+  # Adjustments
   rm -f $TARGET_PATH/README.md # we don't want to preserve this one
+  set_nav_order $TARGET_PATH/index.md $ORDER
 }
 
 while getopts ":d" option; do
@@ -41,4 +55,4 @@ done
 
 git submodule update --init
 
-copy_docs cumulus-library-core library
+copy_docs cumulus-library-core library 1
