@@ -23,7 +23,7 @@ Using Cumulus, you can:
 ## "It's a Dashboard"
 
 Ultimately, the bit of Cumulus that you interact with is a dashboard
-for research studies & public health surveillance.
+for population health studies.
 
 This dashboard lets you monitor symptoms or other health indicators over time,
 in the population you are studying.
