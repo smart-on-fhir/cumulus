@@ -5,4 +5,5 @@
 .jekyll-metadata
 vendor
 
+/docs/etl/
 /docs/library/
