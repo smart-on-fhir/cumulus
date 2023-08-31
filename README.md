@@ -13,6 +13,9 @@ Using Cumulus, you can:
 * Perform key functions, including de-identification and natural language processing of notes
 * Extract data and populate an analytic FHIR environment
 
+If you have any questions about the project,
+visit our [discussion forum](https://github.com/smart-on-fhir/cumulus/discussions).
+
 This repository holds the project documentation build scripts.
 Read [the full documentation on SMART's site](https://docs.smarthealthit.org/cumulus/).
 
