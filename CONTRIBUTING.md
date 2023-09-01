@@ -1,4 +1,16 @@
-# Where is the documentation kept?
+# Contributing to Cumulus
+
+Thank you! What a wonderful impulse.
+
+For pointers to our support forums and repos where the code actually lives,
+see [our website](https://docs.smarthealthit.org/cumulus/support.html).
+
+This repository itself is a project-wide, general purpose repo.
+It mostly holds documentation and the forums.
+
+## Helping with project documentation
+
+### Where is the documentation kept?
 
 Some of it is kept here, like a general project overviews and some integration docs.
 But most of it is held elsewhere.
@@ -6,7 +18,7 @@ But most of it is held elsewhere.
 Each Cumulus project has its own little docs/ fiefdom in its own repo.
 This way, docs can update as code changes more easily.
 
-# When does the documentation get updated?
+### When does the documentation get updated?
 
 - Every time this repo is updated, the documentation is rebuilt.
 - It can also be rebuilt manually in GitHub.
@@ -14,7 +26,7 @@ This way, docs can update as code changes more easily.
   [send it a GitHub event](https://github.com/smart-on-fhir/cumulus-library/blob/main/.github/workflows/pages.yaml),
   to rebuild docs.
 
-# Conventions for repo documentation
+### Conventions for repo documentation
 - Everything in `docs/` is going to be accessible on public docs site (direct URL at minimum)
   - Which might affect the tone of your text as well as which files go in there
   - Except for `docs/README.md` which we won't include, so that you can explain what the
@@ -40,7 +52,10 @@ This way, docs can update as code changes more easily.
   - It can be helpful to consider what [sort of document](https://diataxis.fr/) you
     are writing.
 
-# Building the docs
+Read the [just-the-docs documentation](https://just-the-docs.github.io/just-the-docs/)
+for syntax help.
+
+### Building the docs
 
 1. Install jekyll: https://jekyllrb.com/docs/installation/
 1. `gem install builder`
@@ -55,7 +70,7 @@ It is safe to run multiple times, but only needs to be done once.
 
 `serve.sh` builds all the prepped docs and runs a local server for testing.
 
-## Testing local changes in a different repo
+#### Testing local changes in a different repo
 
 If you change docs in one of our source repos (like `cumulus-library`),
 you may want to see how they look before pushing them up.
