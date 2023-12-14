@@ -20,3 +20,16 @@ This repository holds the project documentation build scripts.
 Read [the full documentation on SMART's site](https://docs.smarthealthit.org/cumulus/).
 
 If you are looking to edit the documentation, read our [guide for contributors](CONTRIBUTING.md).
+
+## Source Code Repositories
+
+This repo is the main entry point for the Cumulus project as a whole.
+Our [project documentation](https://docs.smarthealthit.org/cumulus/),
+[discussion forum](https://github.com/smart-on-fhir/cumulus/discussions),
+and [support issues](https://github.com/smart-on-fhir/cumulus/issues)
+are hosted here.
+
+When in doubt, you can post questions and suggestions here.
+But there are other useful repos that host separate pieces of Cumulus:
+- Cumulus ETL: the [cumulus-etl](https://github.com/smart-on-fhir/cumulus-etl) project
+- Cumulus Library: the [cumulus-library](https://github.com/smart-on-fhir/cumulus-library) project

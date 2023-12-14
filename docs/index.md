@@ -89,3 +89,6 @@ But until that's released, you can still explore your data using SQL directly.
 If you are simply familiarizing yourself with the project, click around on the sidebar and explore.
 
 If you are looking to get your hands dirty and start using Cumulus, begin with the [ETL](etl).
+
+Or if you just want to look at source code,
+head to the [main project repo](https://github.com/smart-on-fhir/cumulus).
