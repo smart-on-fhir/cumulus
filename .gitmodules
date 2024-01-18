@@ -4,3 +4,6 @@
 [submodule "sources/cumulus-etl"]
 	path = sources/cumulus-etl
 	url = https://github.com/smart-on-fhir/cumulus-etl.git
+[submodule "sources/chart-review"]
+	path = sources/chart-review
+	url = https://github.com/smart-on-fhir/chart-review.git

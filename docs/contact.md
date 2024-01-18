@@ -28,6 +28,7 @@ But if you want to search for existing reports, here are the main Cumulus subpro
 - When in doubt: the general [cumulus](https://github.com/smart-on-fhir/cumulus) project
 - Cumulus ETL: the [cumulus-etl](https://github.com/smart-on-fhir/cumulus-etl) project
 - Cumulus Library: the [cumulus-library](https://github.com/smart-on-fhir/cumulus-library) project
+- Chart Review: the [chart-review](https://github.com/smart-on-fhir/chart-review) project
 
 ## Code of Conduct
 
