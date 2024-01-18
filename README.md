@@ -33,3 +33,4 @@ When in doubt, you can post questions and suggestions here.
 But there are other useful repos that host separate pieces of Cumulus:
 - Cumulus ETL: the [cumulus-etl](https://github.com/smart-on-fhir/cumulus-etl) project
 - Cumulus Library: the [cumulus-library](https://github.com/smart-on-fhir/cumulus-library) project
+- Chart Review: the [chart-review](https://github.com/smart-on-fhir/chart-review) project

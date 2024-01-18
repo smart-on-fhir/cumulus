@@ -45,6 +45,7 @@ This way, docs can update as code changes more easily.
     - https://docs.smarthealthit.org/cumulus/
     - https://docs.smarthealthit.org/cumulus/etl/
     - https://docs.smarthealthit.org/cumulus/library/
+    - https://docs.smarthealthit.org/cumulus/chart-review/
   - That rule is designed to allow each repo to move files around at will, without breaking the
     world. But don't rename files willy-nilly, since any links out there on the web or user
     bookmarks/history might break if a filename changes.

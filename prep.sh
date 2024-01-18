@@ -58,3 +58,4 @@ git submodule update --init --remote
 # Only use nav_order 10-20 for submodules
 copy_docs cumulus-etl etl 10
 copy_docs cumulus-library library 11
+copy_docs chart-review chart-review 12
