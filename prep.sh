@@ -59,3 +59,4 @@ git submodule update --init --remote
 copy_docs cumulus-etl etl 10
 copy_docs cumulus-library library 11
 copy_docs chart-review chart-review 12
+copy_docs cumulus-aggregator aggregator 13
