@@ -80,8 +80,17 @@ But each study's queries have the same basic idea: they only provide counts of a
 That is worth emphasizing: **the end result is simply a number**.
 No PHI to worry about.
 
+### Combining Data from Multiple Hospitals
+
+With the data de-identified, it's now sharable with other hospital data to get a larger population
+as a source for a clinical studies. The [**Cumulus Aggregator**](aggregator) can be deployed in the cloud
+to automate combining data on whenever a hospital has a new dataset available.
+
+The combined data can be downloaded directly from the aggregator for use in the dashboard. There
+is also an API available that can be used to programmatically retrieve data.
+
 {: .note }
-In the future, you'll be able to send these counts to the Cumulus Dashboard.
+In the future, you'll be able to view library/aggregator count data in the Cumulus Dashboard.
 But until that's released, you can still explore your data using SQL directly.
 
 ## Further Reading
