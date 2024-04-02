@@ -45,6 +45,13 @@ copy_docs()
   set_nav_order $TARGET_PATH/index.md $ORDER
 }
 
+rewind_submodule_to_last_tag()
+{
+  REPO=sources/$1
+  LATEST_TAG=$(git -C $REPO describe --abbrev=0 --tags)
+  git -C $REPO checkout "$LATEST_TAG"
+}
+
 while getopts ":d" option; do
    case $option in
       d) # dev (local) mode, assumes that we are siblings of other source packages
@@ -54,6 +61,13 @@ while getopts ":d" option; do
 done
 
 git submodule update --init --remote
+
+# Some projects do proper releases, and for those we should only
+# reference the latest tagged release. Other projects (like the
+# ETL or aggregator) don't do normal releases and so can just
+# pull from main.
+rewind_submodule_to_last_tag cumulus-library
+rewind_submodule_to_last_tag chart-review
 
 # Only use nav_order 10-20 for submodules
 copy_docs cumulus-etl etl 10
