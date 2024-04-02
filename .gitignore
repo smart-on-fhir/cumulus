@@ -5,5 +5,7 @@
 .jekyll-metadata
 vendor
 
+/docs/aggregator/
+/docs/chart-review/
 /docs/etl/
 /docs/library/
