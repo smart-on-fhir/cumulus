@@ -9,4 +9,4 @@
 	url = https://github.com/smart-on-fhir/chart-review.git
 [submodule "sources/cumulus-aggregator"]
 	path = sources/cumulus-aggregator
-	url = https://github.com/smart-on-fhir/cumulus-aggregator
+	url = https://github.com/smart-on-fhir/cumulus-aggregator.git
