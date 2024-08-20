@@ -22,8 +22,8 @@ up and running, you can reuse much of that work for future research questions.
 
 We've published several papers using Cumulus, to give you the idea of the work
 the project enables. You can see the full list on the 
-[study List](https://docs.smarthealthit.org/cumulus/library/study-list.html)
-- each study contains a link to the associated paper.
+[study list](https://docs.smarthealthit.org/cumulus/library/study-list.html)
+\- each study contains a link to the associated paper.
 
 ## What you'll need
 
@@ -31,13 +31,13 @@ the project enables. You can see the full list on the
 [Cumulus ETL](https://docs.smarthealthit.org/cumulus/etl/)
 set up to get data from your EHR if you haven't already. This usually requires
 an IT project to initially configure. This handles extracting and de-identifying
-the patient data
+the patient data.
 - You'll need the
 [Cumulus Library](https://docs.smarthealthit.org/cumulus/library/)
-to help you analyze the data
+to help you analyze the data.
 - You may need someone from your EHR support team to help you define a
 patient cohort in your EHR system.
-- You may need a data analyst who knows SQL and python
+- You may need a data analyst who knows SQL and Python.
 
 ## Designing a study
 
@@ -104,12 +104,12 @@ number of patients (i.e. in the low hundreds). If you want, you can leverage
 [propensity score matching](https://docs.smarthealthit.org/cumulus/library/statistics/propensity-score-matching.html)
 to generate a set of positive/negative groups around a specific feature.
 Once you've got a cohort, you can use
-(Cumulus ETL)[https://docs.smarthealthit.org/cumulus/etl/chart-review.html]
+[Cumulus ETL](https://docs.smarthealthit.org/cumulus/etl/chart-review.html)
 to load notes into this environment. 
 
 #### Decide on approach with your chart review data
 
-You can use labelstudio to annotate the appropriate features (i.e. symptoms, 
+You can use Label Studio to annotate the appropriate features (i.e. symptoms, 
 clinical procedures, etc) in your patient cohort. With this labeled data, you
 can try NLP/LLM approaches, and use this dataset for validating how they
 performed. The exact form of this will depend on the particular technology used - 
@@ -128,7 +128,7 @@ of the LLM should be available for use in your study.
 ### Build your study
 
 A 
-[Cumulus study]https://docs.smarthealthit.org/cumulus/library/creating-studies.html
+[Cumulus study](https://docs.smarthealthit.org/cumulus/library/creating-studies.html)
 is a collection of intersections between different 
 [FHIR resources](https://docs.smarthealthit.org/cumulus/resources.html)
 based on some properties among those resources. They can be expressed
