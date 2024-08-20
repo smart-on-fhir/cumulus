@@ -122,7 +122,7 @@ project for an approach based on prompt iteration for LLMs.
 Once you've got a LLM approach, your IT staff will need to 
 [add it to the ETL](https://docs.smarthealthit.org/cumulus/etl/nlp.html).
 This is fairly simple for tasks leveraging a previously configured LLM.
-After this, you simply rerun the etl, and a table containing the outputs
+After this, you simply rerun the ETL, and a table containing the outputs
 of the LLM should be available for use in your study.
 
 ### Build your study
