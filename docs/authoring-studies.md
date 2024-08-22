@@ -47,8 +47,8 @@ Here's a workflow that most Cumulus studies will follow some version of.
 
 Here are some examples of questions that have used Cumulus as a tool for analysis:
 
-- [Can I detect patient symptoms from physician notes?](https://github.com/smart-on-fhir/cumulus-library-covid)
-- [What was the effect of the Covid-19 pandemic on suicidality rates?](https://github.com/smart-on-fhir/cumulus-library-suicidality-los)
+- [Can I detect infectious disease symptoms from physician notes?](https://github.com/smart-on-fhir/cumulus-library-covid)
+- [What was the effect of the Covid-19 pandemic on suicidality length of stay?](https://github.com/smart-on-fhir/cumulus-library-suicidality-los)
 - [How much does my EHR comply with the requirements of the US Core Profile?](https://github.com/smart-on-fhir/cumulus-library-data-metrics/)
 
 Generally, a good question for cumulus has one or more of the following qualities:
