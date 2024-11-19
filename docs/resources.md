@@ -46,7 +46,7 @@ Over time, more resources will be added to the `core` study.
 
 | Resource           | ETL           | `core` |
 |--------------------|---------------|--------|
-| AllergyIntolerance | ✅             | ❌      |
+| AllergyIntolerance | ✅             | ✅      |
 | Condition          | ✅             | ✅      |
 | Device             | ✅             | ❌      |
 | DiagnosticReport   | ✅             | ❌      |
