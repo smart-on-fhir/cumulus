@@ -49,7 +49,7 @@ Over time, more resources will be added to the `core` study.
 | AllergyIntolerance | ✅             | ✅      |
 | Condition          | ✅             | ✅      |
 | Device             | ✅             | ❌      |
-| DiagnosticReport   | ✅             | ❌      |
+| DiagnosticReport   | ✅             | ✅      |
 | DocumentReference  | ✅             | ✅      |
 | Encounter          | ✅             | ✅      |
 | Immunization       | ✅             | ❌      |
