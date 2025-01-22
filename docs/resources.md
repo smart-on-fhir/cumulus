@@ -57,7 +57,7 @@ Over time, more resources will be added to the `core` study.
 | MedicationRequest  | ✅             | ✅      |
 | Observation        | ✅             | ✅      |
 | Patient            | ✅             | ✅      |
-| Procedure          | ✅             | ❌      |
+| Procedure          | ✅             | ✅      |
 | ServiceRequest     | ✅             | ❌      |
 
 1. Medications are not usually bulk-exportable.
