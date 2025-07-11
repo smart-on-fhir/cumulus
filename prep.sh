@@ -64,13 +64,17 @@ git submodule update --init --remote
 
 # Some projects do proper releases, and for those we should only
 # reference the latest tagged release. Other projects (like the
-# ETL or aggregator) don't do normal releases and so can just
-# pull from main.
-rewind_submodule_to_last_tag cumulus-library
-rewind_submodule_to_last_tag chart-review
+# aggregator) don't do normal releases and so can just pull from main.
+if [ "$SOURCE" = "$DEFAULT_SOURCE" ]; then
+  rewind_submodule_to_last_tag cumulus-etl
+  rewind_submodule_to_last_tag cumulus-library
+  rewind_submodule_to_last_tag chart-review
+  rewind_submodule_to_last_tag smart-fetch
+fi
 
 # Only use nav_order 10-20 for submodules
 copy_docs cumulus-etl etl 10
 copy_docs cumulus-library library 11
 copy_docs cumulus-aggregator aggregator 12
 copy_docs chart-review chart-review 13
+copy_docs smart-fetch fetch 14

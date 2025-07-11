@@ -10,3 +10,6 @@
 [submodule "sources/cumulus-aggregator"]
 	path = sources/cumulus-aggregator
 	url = https://github.com/smart-on-fhir/cumulus-aggregator.git
+[submodule "sources/smart-fetch"]
+	path = sources/smart-fetch
+	url = https://github.com/smart-on-fhir/smart-fetch.git
