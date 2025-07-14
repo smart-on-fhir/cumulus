@@ -35,3 +35,4 @@ But there are other useful repos that host separate pieces of Cumulus:
 - Cumulus Library: the [cumulus-library](https://github.com/smart-on-fhir/cumulus-library) project
 - Chart Review: the [chart-review](https://github.com/smart-on-fhir/chart-review) project
 - Cumulus Aggregator: the [cumulus-aggregator](https://github.com/smart-on-fhir/cumulus-aggregator) project
+- SMART Fetch: the [smart-fetch](https://github.com/smart-on-fhir/smart-fetch) project
