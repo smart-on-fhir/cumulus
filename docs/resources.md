@@ -44,22 +44,25 @@ Over time, more resources will be added to the `core` study.
 
 ## Support List
 
-| Resource           | ETL           | `core` |
-|--------------------|---------------|--------|
-| AllergyIntolerance | ✅             | ✅      |
-| Condition          | ✅             | ✅      |
-| Device             | ✅             | ❌      |
-| DiagnosticReport   | ✅             | ✅      |
-| DocumentReference  | ✅             | ✅      |
-| Encounter          | ✅             | ✅      |
-| Immunization       | ✅             | ❌      |
-| Medication         | ✅<sup>1</sup> | ✅      |
-| MedicationRequest  | ✅             | ✅      |
-| Observation        | ✅             | ✅      |
-| Patient            | ✅             | ✅      |
-| Procedure          | ✅             | ✅      |
-| ServiceRequest     | ✅             | ❌      |
+| Resource                     | ETL | `core` |
+|------------------------------|-----|--------|
+| AllergyIntolerance           | ✅   | ✅      |
+| Condition                    | ✅   | ✅      |
+| Device                       | ✅   | ❌      |
+| DiagnosticReport             | ✅   | ✅      |
+| DocumentReference            | ✅   | ✅      |
+| Encounter                    | ✅   | ✅      |
+| Immunization                 | ✅   | ❌      |
+| Location<sup>1</sup>         | ✅   | ✅      |
+| Medication<sup>1</sup>       | ✅   | ✅      |
+| MedicationRequest            | ✅   | ✅      |
+| Observation                  | ✅   | ✅      |
+| Organization<sup>1</sup>     | ✅   | ✅      |
+| Patient                      | ✅   | ✅      |
+| Practitioner<sup>1</sup>     | ✅   | ✅      |
+| PractitionerRole<sup>1</sup> | ✅   | ✅      |
+| Procedure                    | ✅   | ✅      |
+| ServiceRequest               | ✅   | ❌      |
 
-1. Medications are not usually bulk-exportable.
-Instead, as the ETL processes MedicationRequest resources,
-it downloads any linked Medication resources as well.
+1. Not bulk-exportable, but can be downloaded using
+   [SMART Fetch](https://docs.smarthealthit.org/cumulus/fetch/)
