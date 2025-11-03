@@ -52,7 +52,7 @@ Bedrock, enforcing JSON schemas for responses),
 the study-specific code can focus on the clinical logic.
 
 #### Example Code
-In pseudocode, here's the Python code for a task that talks to an LLM like GPT-OSS might look like:
+In pseudocode, here's what a task that talks to an LLM like GPT-OSS might look like:
 
 ```python
 for clinical_note in etl.read_notes():
@@ -64,7 +64,8 @@ for clinical_note in etl.read_notes():
 Those calls to `etl.*` are calls to the internal NLP support code that the task does not have to
 re-invent.
 
-And with that relatively low level of complexity (though finding the right prompt can be hard),
+And with that relatively low level of complexity
+(though developing the best prompt can be its own challenge and is out of scope for this document),
 you've got a study task that you can run over all your institution's clinical notes. 
 
 ## Available NLP Strategies
@@ -137,11 +138,11 @@ All _you_ have to bring to the table is your own GPU hardware.
 
 #### Example
 
-As an example, let's say you want to run the `covid_symptom` study.
-The command below will launch all the services that study needs.
-In this case, that means cTAKES and two different cNLP transformers.
+As an example, let's say you want to run the GPT-OSS model, to use in a study that supports it.
+Just run the command below
+(on a machine powerful enough to handle it - per the study's documentation):
 ```shell
-docker compose up --wait --profile covid-symptom-gpu
+docker compose up --wait gpt-oss-120b
 ```
 
 (This is a Docker Compose command, using the Cumulus ETL compose file.
