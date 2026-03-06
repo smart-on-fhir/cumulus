@@ -52,9 +52,11 @@ Over time, more resources will be added to the `core` study.
 | DiagnosticReport             | ✅   | ✅      |
 | DocumentReference            | ✅   | ✅      |
 | Encounter                    | ✅   | ✅      |
+| EpisodeOfCare                | ✅   | ❌      |
 | Immunization                 | ✅   | ❌      |
 | Location<sup>1</sup>         | ✅   | ✅      |
 | Medication<sup>1</sup>       | ✅   | ✅      |
+| MedicationDispense           | ✅   | ❌      |
 | MedicationRequest            | ✅   | ✅      |
 | Observation                  | ✅   | ✅      |
 | Organization<sup>1</sup>     | ✅   | ✅      |
