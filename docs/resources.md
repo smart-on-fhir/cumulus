@@ -65,6 +65,7 @@ Over time, more resources will be added to the `core` study.
 | PractitionerRole<sup>1</sup> | ✅   | ✅      |
 | Procedure                    | ✅   | ✅      |
 | ServiceRequest               | ✅   | ❌      |
+| Specimen                     | ✅   | ❌      |
 
 1. Not bulk-exportable, but can be downloaded using
    [SMART Fetch](https://docs.smarthealthit.org/cumulus/fetch/)
