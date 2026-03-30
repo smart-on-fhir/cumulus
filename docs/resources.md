@@ -52,7 +52,7 @@ Over time, more resources will be added to the `core` study.
 | DiagnosticReport             | ✅   | ✅      |
 | DocumentReference            | ✅   | ✅      |
 | Encounter                    | ✅   | ✅      |
-| EpisodeOfCare                | ✅   | ❌      |
+| EpisodeOfCare                | ✅   | ✅      |
 | Immunization                 | ✅   | ❌      |
 | Location<sup>1</sup>         | ✅   | ✅      |
 | Medication<sup>1</sup>       | ✅   | ✅      |
@@ -64,8 +64,8 @@ Over time, more resources will be added to the `core` study.
 | Practitioner<sup>1</sup>     | ✅   | ✅      |
 | PractitionerRole<sup>1</sup> | ✅   | ✅      |
 | Procedure                    | ✅   | ✅      |
-| ServiceRequest               | ✅   | ❌      |
-| Specimen                     | ✅   | ❌      |
+| ServiceRequest               | ✅   | ✅      |
+| Specimen                     | ✅   | ✅      |
 
 1. Not bulk-exportable, but can be downloaded using
    [SMART Fetch](https://docs.smarthealthit.org/cumulus/fetch/)
