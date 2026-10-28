@@ -38,6 +38,12 @@ to help you analyze the data.
 - You may need someone from your EHR support team to help you define a
 patient cohort in your EHR system.
 - You may need a data analyst who knows SQL and Python.
+- You may to reference some studies the SMART team maintains,
+such as the [RxNorm vocabulary](https://github.com/smart-on-fhir/cumulus-library-rxnorm), and
+[Loinc Database](https://github.com/smart-on-fhir/cumulus-library-loinc).
+We recommend
+referencing the [list of studies](https://docs.smarthealthit.org/cumulus/library/study-list.html)
+before implementing your study. 
 
 ## Designing a study
 
