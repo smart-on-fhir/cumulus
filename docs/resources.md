@@ -56,7 +56,7 @@ Over time, more resources will be added to the `core` study.
 | Immunization                 | ✅   | ❌      |
 | Location<sup>1</sup>         | ✅   | ✅      |
 | Medication<sup>1</sup>       | ✅   | ✅      |
-| MedicationDispense           | ✅   | ❌      |
+| MedicationDispense           | ✅   | ✅      |
 | MedicationRequest            | ✅   | ✅      |
 | Observation                  | ✅   | ✅      |
 | Organization<sup>1</sup>     | ✅   | ✅      |

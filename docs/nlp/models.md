@@ -19,11 +19,19 @@ But these are all the models that a study _could_ make use of:
 
 |                   | Azure | Bedrock | Local |
 |-------------------|-------|---------|-------|
+| Claude Haiku 5.5  | ❌     | ✅       | ❌     |
 | Claude Sonnet 4.5 | ❌     | ✅       | ❌     |
+| Claude Sonnet 4.6 | ❌     | ✅       | ❌     |
+| Claude Sonnet 5.5 | ❌     | ✅       | ❌     |
+| Claude Opus 4.8   | ❌     | ✅       | ❌     |
+| Claude Opus 5.5   | ❌     | ✅       | ❌     |
 | GPT 3.5           | ✅     | ❌       | ❌     |
 | GPT 4             | ✅     | ❌       | ❌     |
 | GPT 4o            | ✅     | ❌       | ❌     |
 | GPT 5             | ✅     | ❌       | ❌     |
+| GPT 5.4           | ✅     | ❌       | ❌     |
+| GPT 5.4 mini      | ✅     | ❌       | ❌     |
+| GPT 5.4 nano      | ✅     | ❌       | ❌     |
 | GPT OSS           | ✅     | ✅       | ✅     |
 | Llama4 Scout      | ✅     | ✅       | ✅     |
 
