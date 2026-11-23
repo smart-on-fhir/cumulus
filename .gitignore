@@ -10,3 +10,5 @@ vendor
 /docs/etl/
 /docs/library/
 /docs/fetch/
+
+.DS_Store
