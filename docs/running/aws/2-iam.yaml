@@ -65,6 +65,17 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:bedrock:us-east-1:${AWS::AccountId}:inference-profile/*"
                   - arn:aws:bedrock:*::foundation-model/*
+        # Similarly, we only need a role to read data from a bucket if bedrock is
+        # in use for NLP. You can remove this permission to further limit PHI access
+        - PolicyName: 'bedrock-decrypt-kms'
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource:
+                  - !ImportValue cumulus-kms-KMSKeyArn
 
   # This role is used by developers to run general use EC2s.
   # It should generally not be granted access to data that is considered
