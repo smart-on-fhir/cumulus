@@ -60,10 +60,14 @@ for syntax help.
 
 ### Building the docs
 
-1. Install jekyll: https://jekyllrb.com/docs/installation/
-1. `gem install builder`
+1. Install rbenv: https://github.com/rbenv/rbenv
+1. Install ruby 3.4.9 as a venv option: `rbenv install 3.2.3`
 1. Clone this repo and get inside it
-1. `builder install`
+1. Create a venv with `rbenv local 3.4.9`
+1. Run `ruby -v` just to make sure it's 3.4.9 (homebrew can supercede a venv)
+1. Run `gem install builder`
+1. Run `builder -v` to make sure it's 2.6.9
+1. Run `builder install` to install dependencies
 1. `./prep.sh`
 1. `./serve.sh`
 1. Visit http://localhost:4000
