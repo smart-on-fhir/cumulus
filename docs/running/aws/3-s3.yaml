@@ -1,0 +1,232 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: S3 Infrastructure for the Cumulus project
+
+Parameters:
+  BucketPrefix:
+    Type: 'String'
+    Description: 'Prefix for Cumulus bucket names (they will look like {BucketPrefix}-{purpose}-{AWS::AccountId}-{AWS::Region})'
+    Default: cumulus
+  WorkgroupName:
+    Type: 'String'
+    Description: 'Name for the workgroup that will store athena query results.'
+    Default: cumulus
+  RoleOrUser:
+    Type: 'String'
+    Description: 'An ARN of a role or username to give access to the buckets to'
+
+Resources:
+  ####################################################
+  # S3 Buckets for raw Cumulus output
+  ####################################################
+
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID: !ImportValue cumulus-kms-KMSKeyArn
+              SSEAlgorithm: 'aws:kms'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration: 
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: RecoveryWindow
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AWSBucketAllowUploads
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-developer"
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+                - !Ref RoleOrUser
+            Action:
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub "${S3Bucket.Arn}/*"
+          - Sid: AWSBucketAllowListing
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-developer"
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+                - !Ref RoleOrUser
+            Action:
+              - s3:ListBucket
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}"
+
+  PHIBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${BucketPrefix}-etl-phi-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID: !ImportValue cumulus-kms-KMSKeyArn
+              SSEAlgorithm: aws:kms
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration: 
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: RecoveryWindow
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30 
+
+
+  PHIBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PHIBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AWSBucketDenyPHIAccess
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource: !Sub "arn:aws:s3:::${PHIBucket}/*"
+            Condition:
+              ArnNotEquals:
+                aws:PrincipalArn:
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+                  - !Ref RoleOrUser
+
+          - Sid: AWSBucketDenyPHIAccessListing
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource: !Sub "arn:aws:s3:::${PHIBucket}"
+            Condition:
+              ArnNotEquals:
+                aws:PrincipalArn:
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+                  - !Ref RoleOrUser
+
+          - Sid: AWSBucketAllowAccess
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+            Action:
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub "${PHIBucket.Arn}/*"
+          - Sid: AWSBucketAllowListing
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+            Action:
+              - s3:ListBucket
+            Resource: !Sub "arn:aws:s3:::${PHIBucket}"
+
+
+        
+
+  ####################################################
+  # Athena queries and where to store them
+  ####################################################
+
+  AthenaBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${BucketPrefix}-athena-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID: !ImportValue cumulus-kms-KMSKeyArn
+              SSEAlgorithm: aws:kms
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration: 
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: RecoveryWindow
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+
+
+  AthenaBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AthenaBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AWSBucketAllowAthenaEndUserAccess
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-developer"
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+            Action:
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub "${AthenaBucket.Arn}/*"
+          - Sid: AWSBucketAllowListing
+            Effect: Allow
+            Principal:
+              AWS: 
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-developer"
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/cumulus-service-role-etl"
+            Action:
+              - s3:ListBucket
+            Resource: !Sub "arn:aws:s3:::${AthenaBucket}"
+
+  AthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Sub "${WorkgroupName}"
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: True
+        PublishCloudWatchMetricsEnabled: True
+        EngineVersion:
+          SelectedEngineVersion: "Athena engine version 3"
+        ResultConfiguration:
+          EncryptionConfiguration:
+            EncryptionOption: SSE_KMS
+            KmsKey: !ImportValue cumulus-kms-KMSKeyArn
+          OutputLocation: !Sub "s3://${AthenaBucket}/results/"
+
+Outputs:
+  BucketName:
+    Description: Cumulus de-identified output bucket ID
+    Value: !Ref S3Bucket
+  PhiBucketName:
+    Description: Cumulus PHI output bucket ID
+    Value: !Ref PHIBucket
+  AthenaBucketName:
+    Description: Cumulus Athena results bucket ID
+    Value: !Ref AthenaBucket

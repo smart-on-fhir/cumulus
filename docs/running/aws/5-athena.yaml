@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Glue infrastructure for a single database for the Cumulus project
+
+Parameters:
+  
+  Prefix:
+    Type: 'String'
+    Description: 'The prefix used for naming new resources.'
+    Default: 'cumulus'
+    AllowedPattern : ".+"
+  BucketPrefix:
+    Type: 'String'
+    Description: 'The prefix of the etl bucket (expected to be like [prefix]-etl-output-[acct]-[region]). It should usually be the same as prefix.'
+    Default: 'cumulus'
+    AllowedPattern : ".+"
+  DatasourceName:
+    Type: String
+    Description: "The description of the datasource, used in user facing names. Should contain at least a description of the datasource [e.g. 'synthea' or 'cerner']."
+    AllowedPattern : ".+"
+  DatasourceLocation:
+    Type: String
+    Description: "The name of the S3 subfolder you're using to store etl output."
+    AllowedPattern: ".+"
+
+####################################################
+  # Glue database & tables for raw Cumulus data
+  ####################################################
+Resources:
+  GlueSecurity:  # Task-level encryption config, used by the Crawler below
+    Type: AWS::Glue::SecurityConfiguration
+    Properties:
+      EncryptionConfiguration:
+        CloudWatchEncryption:
+          KmsKeyArn: !ImportValue cumulus-kms-KMSKeyArn
+          CloudWatchEncryptionMode: SSE-KMS
+        # We don't use Glue Jobs or bookmarks now, but just in case we do in the future:
+        JobBookmarksEncryption:
+          KmsKeyArn: !ImportValue cumulus-kms-KMSKeyArn
+          JobBookmarksEncryptionMode: CSE-KMS
+        S3Encryptions:
+          - KmsKeyArn: !ImportValue cumulus-kms-KMSKeyArn
+            S3EncryptionMode: SSE-KMS
+      Name: !Sub "${Prefix}-${DatasourceName}-kms"
+
+  CrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${Prefix}-${DatasourceName}-glue-s3-access"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+      Policies:
+        - PolicyName: S3BucketAccessPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:PutObject
+                  - kms:Encrypt*
+                  - kms:Decrypt*
+                  - kms:Describe*
+                Resource: 
+                  - !Sub "arn:aws:s3:::${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/*"
+                  - !Sub "arn:aws:s3:::${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/"
+                  - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*'
+              - Effect: Allow
+                Action: logs:AssociateKmsKey
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws-glue/crawlers-role/*"
+
+  GlueDB:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name:
+          Fn::Join: # replace hyphens with underscores for ease of SQL (hyphens are reserved)
+          - '_'
+          - Fn::Split:
+            - '-'
+            - !Sub "${Prefix}_${DatasourceName}_db"
+
+  GlueCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: !Sub "${Prefix}-${DatasourceName}-crawler"
+      DatabaseName: !Ref GlueDB
+      Role: !GetAtt CrawlerRole.Arn
+      CrawlerSecurityConfiguration: !Ref GlueSecurity
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      SchemaChangePolicy:
+        DeleteBehavior: DEPRECATE_IN_DATABASE
+        UpdateBehavior: UPDATE_IN_DATABASE
+      Schedule:
+        # Schedule a monthly run to catch any newly-added fields automatically
+        ScheduleExpression: "cron(0 8 1 * ? *)"  # 8am on the 1st of the month
+      Targets:
+        DeltaTargets:
+          # Unfortunately, we can't seem to use wildcards to define tables.
+          # And each DeltaTables entry can only hold ten tables (AWS-side limitation).
+          # But we can just have multiple groupings of ten!
+          - DeltaTables:
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/allergyintolerance"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/condition"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/device"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/diagnosticreport"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/documentreference"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/episodeofcare"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/encounter"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/immunization"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/location"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/medication"
+            CreateNativeDeltaTable: True
+            WriteManifest: False
+          - DeltaTables:
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/medicationdispense"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/medicationrequest"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/observation"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/organization"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/patient"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/practitioner"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/practitionerrole"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/procedure"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/servicerequest"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/specimen"
+            CreateNativeDeltaTable: True
+            WriteManifest: False
+          - DeltaTables:
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/etl__completion"
+              - !Sub "s3://${BucketPrefix}-etl-output-${AWS::AccountId}-${AWS::Region}/${DatasourceLocation}/etl__completion_encounters"
+            CreateNativeDeltaTable: True
+            WriteManifest: False

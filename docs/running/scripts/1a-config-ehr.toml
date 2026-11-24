@@ -1,0 +1,4 @@
+fhir-url = "https://url.of.instance.epichosted.com/APIProxyPJX/api/FHIR/R4/"
+token-url = "https://url.of.instance.epichosted.com/APIProxyPJX/oauth2/token"
+smart-client-id = "12345678-90ab-cdef-0123-4567890abcd"
+smart-key = "/path/to/private-key.jwks"

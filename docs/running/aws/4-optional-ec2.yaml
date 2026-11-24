@@ -1,0 +1,174 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: EC2 Launcher
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Instance Description"
+        Parameters:
+          - Name
+          - Environment
+      -
+        Label:
+          default: "EC2 Configuration"
+        Parameters:
+          - InstanceType
+          - KeyPair
+          - RootVolumeSize
+          - Subnet
+
+Mappings:
+  # This maps a processor to an image AMI that is valid for its use
+  # Potential options:
+  # Official Ubuntu 26.04, x86: ami-0b6d9d3d33ba97d99
+  # AWS Ubunto Pro 26.04, ARM: ami-0bc7f2dbdcc6b5303
+  # Note that these AMIs are us-east-1 specific; you may need to adjust them
+  # if you are running in a different region
+  Ec2Map:
+    x8g.medium:
+      AMI: ami-0bc7f2dbdcc6b5303
+    r8g.large:
+      AMI: ami-0bc7f2dbdcc6b5303
+    m8g.xlarge:
+      AMI: ami-0bc7f2dbdcc6b5303
+    r8g.xlarge:
+      AMI: ami-0bc7f2dbdcc6b5303
+    g4dn.xlarge:
+      AMI: ami-0b6d9d3d33ba97d99
+  
+  #change/expand these to match your internal config:
+  SubnetMap:
+    prod-internal-us-east-1a:
+      SubnetId: subnet-11111111111111111
+      SecurityGroupIds:
+        - sg-aaaaaaaaaaaaaaaaa
+    prod-internal-us-east-1b:
+      SubnetId: subnet-22222222222222222
+      SecurityGroupIds:
+        - sg-aaaaaaaaaaaaaaaaa
+
+Parameters:
+  # Instance Params
+  Name:
+    Description: EC2 name
+    Type: String
+  Environment:
+    Description:  Environment tag
+    Type: String
+    AllowedValues:
+      - prod
+      - test
+      - dev
+    Default: dev
+  
+  # Config Params\
+  InstanceType:
+    Description:  EC2 instance type, ordered by approximate hourly cost
+    Type: String
+    AllowedValues:
+      - x8g.medium - 1 ARM CPU 16GB RAM, $.10 - Memory instensive, burst workloads
+      - r8g.large - 2 ARM CPU, 16GB RAM, $.12 - Memory instensive, long running workloads
+      - m8g.xlarge - 4 ARM CPUs, 16GB RAM, $.18 - Computationally heavy workloads
+      - r8g.xlarge - 4 ARM CPUs, 32GB RAM, $.23 - ETL and other very complex workloads
+      - g4dn.xlarge - 4x64 CPUs + 1 NVIDIA Tensor Core GPU, 16 GB RAM, $.56 - Running NLP tasks
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: r8g.xlarge - 4 ARM CPUs, 32GB RAM, $.23 - ETL and other very complex workloads
+  KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+  RootVolumeSize:
+    Type: Number
+    Default: 200
+
+  Subnet:
+    Type: String
+    AllowedValues:
+      - prod-internal-us-east-1a
+      - prod-internal-us-east-1b
+    Default: dev-us-east-1b
+
+
+Resources:
+
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !Select ["0", !Split [" - ", !Sub "${InstanceType}" ]]
+      ImageId: !FindInMap
+        - Ec2Map
+        - !Select ["0", !Split [" - ", !Sub "${InstanceType}" ]]
+        - AMI
+      IamInstanceProfile: "cumulus-instance-profile-developer"
+      KeyName: !Ref KeyPair
+
+
+      SubnetId: !FindInMap
+        - SubnetMap
+        - !Ref Subnet
+        - SubnetId
+      SecurityGroupIds: !FindInMap
+        - SubnetMap
+        - !Ref Subnet
+        - SecurityGroupIds
+      
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sda1"
+          Ebs:
+            VolumeSize: !Ref RootVolumeSize
+            Encrypted: 'true'
+            KmsKeyId: !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/cumulus-s3-kms'
+      Tags:
+        - Key: Name
+          Value: !Ref Name
+        - Key: Environment
+          Value: !Ref Environment
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -ex
+
+              export NAME="${bashName}"
+              export AWS_ENCRYPTION="Yes"
+
+              export AWS_AVAIL_ZONE=$(curl http://169.254.169.254/latest/meta-data/placement/availability-zone)
+              export AWS_REGION="`echo \"$AWS_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
+              export AWS_INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+
+              apt -y update
+
+              echo "## Installing AWS CLI 2"
+              snap install aws-cli --classic
+
+              echo "## Installing python 3"
+              apt install -y python3 python3-pip
+
+              echo "## Installing docker"
+              # Add Docker's official GPG key:
+              apt -y  install ca-certificates curl gnupg
+              install -m 0755 -d /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+              chmod a+r /etc/apt/keyrings/docker.gpg
+
+              # Add the repository to Apt sources:
+              echo \
+                "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+                "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+                tee /etc/apt/sources.list.d/docker.list > /dev/null
+              apt -y  update
+
+              apt -y  install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+              usermod -aG docker ubuntu
+
+              # docker networking workaround
+              echo "{\"default-address-pools\" : [{\"base\" : \"172.150.0.0/16\",\"size\" : 24}]}" > /etc/docker/daemon.json
+
+              sudo systemctl restart docker.service
+              sudo systemctl restart docker.socket
+            - bashName: !Ref AWS::StackName
+
+Outputs:
+  InstanceID:
+    Value: !Ref EC2Instance
+    Description: EC2 instance ID

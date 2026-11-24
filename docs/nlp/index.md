@@ -1,6 +1,6 @@
 ---
 title: NLP
-nav_order: 2
+nav_order: 3
 has_children: true
 # audience: non-programmers, conversational tone, selling a bit
 # type: explanation

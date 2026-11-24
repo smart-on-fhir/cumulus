@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM roles & permissions for use by the Cumulus project
+
+Resources:
+
+  # This role is used to run the ETL Pipeline. It is expected that this role
+  # will be able to access data considered to be PHI
+  CumulusETLRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: cumulus-service-role-etl
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: 'athena-access'
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:CreatePartition
+                  - glue:CreateTable
+                  - glue:DeletePartition
+                  - glue:DeleteTable
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:UpdatePartition
+                  - glue:UpdateTable
+                Resource:
+                  - arn:aws:glue:*:*:catalog
+                  - arn:aws:glue:*:*:database/*
+                  - arn:aws:glue:*:*:table/*
+              - Effect: Allow
+                Action:
+                  - athena:*
+                Resource: 
+                  - arn:aws:athena:*:*:*
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                Resource:
+                  - arn:aws:s3:::*
+        # Bedrock is not required for calling NLP services, but is one option that
+        # we can manage inside AWS, so we'll give this role permissions to call it.
+        # You can remove this if you want to disable Bedrock access.
+        - PolicyName: 'bedrock-nlp-access'
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub "arn:aws:bedrock:us-east-1:${AWS::AccountId}:inference-profile/*"
+                  - arn:aws:bedrock:*::foundation-model/*
+
+  # This role is used by developers to run general use EC2s.
+  # It should generally not be granted access to data that is considered
+  # PHI, though it may have access to data considered to be a limited dataset
+  CumulusDeveloperRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      RoleName: cumulus-service-role-developer
+
+
+
+  # This profile provides the ETL S3 role as a default for new EC2 instances
+  EC2ETLInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: "cumulus-instance-profile-etl"
+      Roles: 
+        - !Ref CumulusETLRole
+
+  # This profile provides the dev S3 role as a default for new EC2 instances
+  EC2DeveloperInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: "cumulus-instance-profile-developer"
+      Roles: 
+        - !Ref CumulusDeveloperRole
+
+
+Outputs:
+  ETLRole:
+    Description: Role for ETL jobs
+    Value: !GetAtt CumulusETLRole.Arn
+  DeveloperRole:
+    Description: Role for general development usage
+    Value: !GetAtt CumulusDeveloperRole.Arn
+  ETLInstanceProfile:
+    Description: Profile used by ETL
+    Value: !GetAtt EC2ETLInstanceProfile.Arn
+  DeveloperInstanceProfile:
+    Description: Profile used by ETL
+    Value: !GetAtt EC2DeveloperInstanceProfile.Arn
+ 

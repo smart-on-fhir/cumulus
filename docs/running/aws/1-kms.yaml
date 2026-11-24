@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: KMS key for the Cumulus project
+
+Resources:
+  KmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-s3
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow VPC Flow Logs to use the key as well
+            Effect: Allow
+            Principal:
+              Service:
+                - delivery.logs.amazonaws.com
+            Action: 'kms:GenerateDataKey*'
+            Resource: '*'
+          - Sid: Allow CloudWatch Logs to use the key as well
+            # https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html
+            Effect: Allow
+            Principal:
+              Service:
+                - !Sub 'logs.${AWS::Region}.amazonaws.com'
+            Action:
+              - 'kms:Encrypt*'
+              - 'kms:Decrypt*'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:Describe*'
+            Resource: '*'
+            Condition:
+              ArnLike:
+                kms:EncryptionContext:aws:logs:arn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*'
+
+  KmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/cumulus-s3-kms"
+      TargetKeyId:
+        Ref: KmsKey
+
+Outputs:
+  KMSKeyArn:
+    Description: S3 KMS Key Arn
+    Value: !GetAtt KmsKey.Arn
+    Export:
+      Name: !Sub "cumulus-kms-KMSKeyArn"
