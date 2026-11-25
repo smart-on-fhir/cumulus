@@ -11,7 +11,7 @@ has_children: true
 One of the big features of Cumulus is the ability to easily unlock findings from your
 clinical notes with the power of natural language processing (NLP).
 
-The general idea is that Cumulus can run NLP over your clinical notes,
+The general idea is that Cumulus can run your clinical notes through a large language model (LLM),
 extract findings of interest,
 and record those findings alongside the coded FHIR data.
 
@@ -24,215 +24,230 @@ The first thing to understand is that Cumulus always
 runs NLP in the context of a specific clinical purpose,
 which we'll call a "study."
 
-Each study's design will have its own needs and its own NLP strategy,
-so Cumulus supports multiple approaches.
+Each study's design will have its own questions to ask of the notes,
+so each study defines its own prompts and its own expected answers.
 
 {: .note }
-Example: The `covid_symptom` study used cTAKES and a negation transformer working together to tag
-infectious disease symptoms in clinical notes.
-But another study might use the GPT-OSS large language model,
-with a prompt like "Does this patient have a nosebleed?"
+Example: a infectious disease symptoms study might ask an LLM
+"Does the patient in this clinical note have a fever?",
+while a chronic disease-specific study might ask "when was the disease first diagnosed".
 
-### But With Re-Usable Code
+### But With Re-Usable Workflows
 
-While the clinical "business logic" of how to drive NLP is inevitably study-specific,
+While the clinical "business logic" of what NLP queries to make is inevitably study-specific,
 the code structure of Cumulus is generic.
 That's what makes it easy to support multiple different NLP strategies.
+Studies describe their NLP needs in a small configuration file called an
+[NLP workflow](https://docs.smarthealthit.org/cumulus/library/workflows/nlp.html),
+and [Cumulus Library](https://docs.smarthealthit.org/cumulus/library/) does the rest.
 
-We'll go into more depth about what an NLP task does under the covers [below](#technical-workflow).
-But for now, here's a basic outline of how Cumulus runs an NLP study task:
-1. Prepare the clinical notes
-2. Hand those notes to a bit of study-specific Python code (which probably talks to an LLM)
-3. Record the structured, extracted answers in an AWS Athena database
+Here's a basic outline of how Cumulus runs NLP for a study:
+1. Select which clinical notes are worth looking at
+   (for example, notes for patients in the study cohort, or notes mentioning a keyword)
+2. Send each selected note to an LLM, along with the study's prompt and question schema
+3. Record the structured, extracted answers in a database table
 4. Use SQL to examine the extracted data along with structured FHIR data to determine study results
 
-Because Cumulus has a growing internal library of NLP support code
+Because Cumulus Library has a growing internal library of NLP support code
 (things like automatically caching results, supporting different LLM providers like Azure and
-Bedrock, enforcing JSON schemas for responses),
+Bedrock, enforcing JSON schemas for responses, and batching requests to save money),
 the study-specific code can focus on the clinical logic.
 
-#### Example Code
-In pseudocode, here's what a task that talks to an LLM like GPT-OSS might look like:
+#### Example Workflow
 
-```python
-for clinical_note in etl.read_notes():
-    prompt = "Does the patient in this clinical note have a nosebleed?"
-    schema = {"has_nosebleed": "boolean"}
-    yield etl.ask_gpt_oss(prompt, schema, clinical_note)
+A study's NLP workflow is a TOML file that looks something like this:
+
+```toml
+config_type = "nlp"
+
+[tables.fever]
+version = 0
+system_prompt = """
+You are a clinical chart reviewer.
+Determine whether the patient in this clinical note has a fever.
+
+Pydantic Schema:
+%JSON-SCHEMA%
+"""
+response_schema = "fever.json"
+select_by_word = ["fever", "febrile", "pyrexia"]
 ```
 
-Those calls to `etl.*` are calls to the internal NLP support code that the task does not have to
-re-invent.
+The `fever.json` file it points at is the response schema:
+a description of exactly what shape of answer the LLM must give.
+Studies usually write it as a small [Pydantic](https://docs.pydantic.dev/) model
+and generate the JSON from that:
 
-And with that relatively low level of complexity
-(though developing the best prompt can be its own challenge and is out of scope for this document),
-you've got a study task that you can run over all your institution's clinical notes. 
+```python
+from pydantic import BaseModel, Field
 
-## Available NLP Strategies
+class FeverMention(BaseModel):
+    has_fever: bool = Field(description="Whether the note says the patient has a fever")
+    spans: list[str] = Field(description="Exact quotes from the note that support the answer")
+```
 
-### Large Language Models (LLMs)
+That's it.
+When the study is built, Cumulus Library finds every note that mentions a fever,
+asks the LLM about it, and writes the answers to a table like `my_study__nlp_fever_gpt_oss_120b`.
 
-Cumulus makes it easy to pass clinical notes to an LLM,
-which are often difficult to set up yourself.
+## Asking Good Questions
 
-Some LLMs are freely-distributable like Meta's [Llama](https://www.llama.com/),
+The machinery is the easy part.
+The real work of an NLP study is deciding what to ask,
+and the schema is where that thinking gets pinned down.
+It's worth getting right before you run anything,
+because every answer the LLM gives (and every chart review that checks those answers)
+will take the schema's shape.
+
+A few rules of thumb:
+- **Ask what a single note can answer.**
+  The LLM sees one note at a time.
+  "Did this note document a fever?" works;
+  "Did this patient ever have a fever?" is a question for your study's SQL,
+  which can combine answers across all of a patient's notes.
+- **Prefer closed answers.**
+  Yes/no fields, dates and fixed lists of choices are easier for the model to get right,
+  easier for SQL to count, and easier for a human reviewer to check than free text.
+  When you offer a list of choices, include a way out like "none of the above" or "not mentioned,"
+  so the model isn't pushed into picking a wrong answer.
+- **Separate "not mentioned" from "no."**
+  A note that never discusses fever is different from one that says "afebrile."
+  Your schema should let the model say which.
+- **Ask for evidence.**
+  Asking the model to quote the text behind its answer (the `spans` field above)
+  makes its answers much easier to check during chart review.
+- **Use the field descriptions.**
+  The schema is sent to the model, so each field's description is part of your prompt.
+  Say exactly what counts, like whether a family history of fever counts as fever.
+- **Expect to iterate.**
+  Your first questions will be wrong in ways that only show up once you compare against
+  human chart review.
+  Each time you change a question or schema in a meaningful way, bump the workflow's `version`
+  so old cached answers aren't reused.
+
+For real-world examples, see the response schemas of the
+[kidney transplant study](https://github.com/smart-on-fhir/cumulus-library-kidney-transplant/tree/main/cumulus_library_kidney_transplant/llm/schemas).
+Cumulus Library also provides
+[shared Pydantic building blocks](https://docs.smarthealthit.org/cumulus/library/workflows/nlp-tables.html#writing-response-schemas-that-work-with-these-builders)
+for common needs like supporting quotes and partial dates.
+
+## Which LLMs?
+
+Some LLMs are freely-distributable like OpenAI's [GPT-OSS](https://openai.com/index/introducing-gpt-oss/),
 and thus can be run locally.
-While others are cloud-based proprietary LLMs like OpenAI's [ChatGPT](https://openai.com/chatgpt),
+Others are cloud-based proprietary LLMs like Anthropic's Claude or OpenAI's GPT models,
 which your institution may have a HIPAA Business Associate Agreement (BAA) with.
 
 Cumulus can handle either type.
+See [Supported Models](models.md) for the full list.
 
-#### Local LLMs
+### Local LLMs
 
 With a local LLM,
 your notes never leave your network and the only cost is GPU time.
 
 Which is great!
 But they can be complicated to set up.
-That's where Cumulus can help by shipping turnkey configurations for these LLMs.
+That's where Cumulus can help by shipping a turnkey Docker configuration for these LLMs.
+For example, on a machine with enough GPU memory, starting GPT-OSS is a single command
+(run from a checkout of [Cumulus Library](https://github.com/smart-on-fhir/cumulus-library)):
 
-See full details [below](#docker-integration),
-but the basic idea is that Cumulus will download the LLM for you,
-configure it for study needs, and launch it.
-We'll also be able to offer recommendations on what sort of hardware you'll need.
+```shell
+docker compose -f docs/compose-nlp.yaml up gpt-oss-120b --wait
+```
 
 {: .note }
-Cumulus ETL uses the standard
-[vLLM inference interface](https://github.com/vllm-project/vllm)
-as an abstraction layer, so integrating new local LLMs is a lightweight process.
+The local models are served with the standard
+[vLLM inference interface](https://github.com/vllm-project/vllm),
+so integrating new local LLMs is a lightweight process.
 
-#### Cloud LLMs
+### Cloud LLMs
 
-Your institution may have a BAA to share protected health information (PHI) with a cloud LLM.
+Your institution may have a BAA to share protected health information (PHI) with a cloud LLM,
+through a provider like Azure or AWS Bedrock.
 
 Talking to a cloud LLM is very similar to a local LLM.
 Instead of making an internal network call to a Docker container,
-Cumulus ETL makes an external network call to the cloud.
-
-The exact API is different, but the concept is the same.
-And importantly, 99% of the Cumulus workflow is the same.
-It would just swap out the actual call to the LLM.
+Cumulus Library makes an external network call to the cloud.
+99% of the Cumulus workflow is the same.
 
 One additional challenge with cloud LLMs is reproducibility,
-but recording metadata like the current time and vendor version in the database
+but recording metadata like the model name, the time, and any vendor fingerprint
 along with the results can at least help explain changes over time.
-
-### Others
-
-Cumulus has supported other approaches like cTAKES.
-Different transformers or services could be integrated, as needed.
-If a new study required a new service, Cumulus can add support for it,
-and then _any_ study would be able to use it.
 
 ## Technical Workflow
 
 How does it all really work though?
 Be warned that this next section will get a little technical.
 
-### Docker Integration
+### Running a Study's NLP
 
-Services like GPT-OSS and cTAKES can be launched with a single command,
-because we ship Docker definitions for them.
+NLP runs as part of building a study with Cumulus Library.
+You point it at your clinical notes, tell it which model to use, and build:
 
-All _you_ have to bring to the table is your own GPU hardware.
-
-#### Example
-
-As an example, let's say you want to run the GPT-OSS model, to use in a study that supports it.
-Just run the command below
-(on a machine powerful enough to handle it - per the study's documentation):
-```shell
-docker compose up --wait gpt-oss-120b
+```sh
+cumulus-library build \
+  --target my_study \
+  --note-dir s3://my-bucket/notes/ \
+  --etl-phi-dir s3://my-phi-bucket/ \
+  --nlp-model gpt-oss-120b \
+  --nlp-provider bedrock
 ```
 
-(This is a Docker Compose command, using the Cumulus ETL compose file.
-More specific instructions on how to set up services for a study will be provided by each study's
-documentation.)
+1. Cumulus Library reads the DocumentReference and DiagnosticReport FHIR resources
+   in your note folder.
+2. It selects the notes the study's workflow asked for.
+3. It feeds those notes to the LLM, along with the study's prompt.
+4. It writes the results (but not the note!) out to your Athena database,
+   right alongside the rest of your Cumulus data.
+5. The rest of the study's SQL then uses those results.
 
-That command works because Cumulus ETL ships a Docker Compose file with stanzas like:
-```yaml
-ctakes-covid:
-  image: smartonfhir/ctakes-covid:1.1.1
-  environment:
-    - ctakes_umlsuser=umls_api_key
-    - ctakes_umlspw=${UMLS_API_KEY:-}
-  networks:
-    - cumulus-etl
-  profiles:
-    - covid-symptom-gpu
-```
+See the [NLP workflow documentation](https://docs.smarthealthit.org/cumulus/library/workflows/nlp.html)
+for all the options, like running faster with concurrency or cheaper with batching.
 
-Docker will download the referenced image and launch it with the specified configuration.
+### Where Does the Note/PHI Live?
 
-### Study Task
+After Cumulus Library runs NLP on a note, it no longer needs the note.
 
-Once you've prepared the services the study will need with Docker Compose,
-you can actually run Cumulus ETL on your clinical notes.
+The note is never pushed to Athena (only the NLP results are, using anonymized IDs).
 
-1. Run the specific NLP study task you are interested in.
-   For example, `docker compose run cumulus-etl-gpu nlp --task covid_symptom__nlp_results …`
-2. Cumulus ETL will read your DocumentReference FHIR resources.
-3. It will download the clinical notes mentioned by those DocumentReferences.
-4. It will feed those notes to an NLP service (in this case, to cTAKES).
-5. It will write the results (but not the note!) out to an Athena database,
-   just like it does with basic FHIR resources.
-   In this example, the results might be a list of infectious disease symptoms that cTAKES
-   found in the note.
-
-#### Where Does the Note/PHI Live?
-
-After Cumulus ETL downloads the clinical note and runs NLP on it,
-it no longer needs the note.
-
-The note is never pushed to Athena (only the NLP results are).
-
-Some aspects of the note might be cached.
-For example cTAKES results are cached, so that we only need to run cTAKES once per note.
-But that will be in a special PHI-capable folder that you provide Cumulus ETL with.
-That is separate location from the Athena databases and can be entirely local to your machine.
+The LLM's responses are cached, so that we only need to pay to process each note once.
+But that cache lives in the same PHI folder you already use with Cumulus ETL.
+That is a separate location from the Athena databases and can be entirely local to your machine.
 
 ### NLP Results
 
-The NLP responses are written to an Athena database and can be queried using SQL.
-Usually by study-specific SQL integrated into the
-[Cumulus Library](https://docs.smarthealthit.org/cumulus/library/).
+The NLP responses are written to an Athena table and can be queried using SQL,
+usually by study-specific SQL in the same study.
 
-[In the `covid_symptom` example we've been using,
-the Athena database row for a `fever` cTAKES match in a clinical note would look something like
+For the fever example above, a row in the results table might look like
 (in JSON form):
 ```json
 {
-  "id": "<anonymized ID>",
-  "docref_id": "<anonymized ID>",
-  "encounter_id": "<anonymized ID>",
-  "subject_id": "<anonymized ID>",
-  "generated_on": "2020-01-20T20:00:00+00:00",
-  "task_version": 3,
-  "match": {
-    "begin": 36,
-    "end": 41,
-    "text": "fever",
-    "polarity": 0,
-    "conceptAttributes": [
-      {"code": "386661006", "cui": "C0015967", "codingScheme": "SNOMEDCT_US", "tui": "T184"},
-      {"code": "50177009", "cui": "C0015967", "codingScheme": "SNOMEDCT_US", "tui": "T184"}
-    ],
-    "type": "SignSymptomMention"
+  "note_ref": "DocumentReference/<anonymized ID>",
+  "encounter_ref": "Encounter/<anonymized ID>",
+  "subject_ref": "Patient/<anonymized ID>",
+  "generated_on": "2026-01-20T20:00:00+00:00",
+  "task_version": 0,
+  "model": "gpt-oss-120b",
+  "result": {
+    "has_fever": true,
+    "spans": ["pt presents with fever of 101.3"]
   }
 }
 ```
 
-As the Cumulus Library SQL processes all the detected symptoms
+As the study SQL processes those results
 and cross-references the patients & encounters,
-it generates counts of patients with fever, headaches, etc.
+it generates counts of patients with fevers.
 Those counts are then sent to the Cumulus Dashboard and
 can then finally be displayed as digestible charts.
 
 And that's the lifecycle of a clinical note!
 It starts inside your EHR,
-flows through the ETL & related NLP services,
-its symptoms end up in Athena,
-and counts of those symptoms get sent to & displayed in the Dashboard.
+flows through the ETL and into an LLM,
+its findings end up in Athena,
+and counts of those findings get sent to & displayed in the Dashboard.
 
 Or a study might then prepare some labels for human chart review,
 to validate the findings.
