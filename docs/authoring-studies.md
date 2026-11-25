@@ -123,13 +123,22 @@ for an example, see the
 [Infectious Respiratory Disease Symptoms](https://github.com/smart-on-fhir/infectious-symptoms-llm-study)
 project for an approach based on prompt iteration for LLMs.
 
-#### Configure ETL to use your approach and rerun extract
+#### Add an NLP workflow to your study
 
-Once you've got a LLM approach, your IT staff will need to 
-[add it to the ETL](https://docs.smarthealthit.org/cumulus/etl/nlp.html).
-This is fairly simple for tasks leveraging a previously configured LLM.
-After this, you simply rerun the ETL, and a table containing the outputs
-of the LLM should be available for use in your study.
+To extract structured data from free-text clinical notes, cumulus studies define the
+structure data they want to extract using Pydantic and JSON Schema representations.
+Authors can find examples of these schemas in the
+[kidney transplant study](https://github.com/smart-on-fhir/cumulus-library-kidney-transplant/tree/main/cumulus_library_kidney_transplant/llm/schemas)
+and some building blocks for building your own in the
+[Cumulus Library documentation](https://docs.smarthealthit.org/cumulus/library/workflows/nlp-tables.html#writing-response-schemas-that-work-with-these-builders).
+
+Once you've got an NLP schema and an LLM approach in mind, you can capture it in an
+[NLP workflow](https://docs.smarthealthit.org/cumulus/library/workflows/nlp.html):
+a small config file in your study that holds your LLM prompt, the expected response format,
+and which notes to look at.
+When your study is built, Cumulus Library runs your notes through the LLM,
+and a table containing the outputs of the LLM will be available for the rest of your study to use.
+See [How Does Cumulus Use NLP?](nlp/) for an overview.
 
 ### Build your study
 
