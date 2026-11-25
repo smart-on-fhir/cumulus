@@ -17,25 +17,25 @@ Below, you can see a support matrix of the models and providers that Cumulus Lib
 Individual study support might be more limited, depending on the study design.
 But these are all the models that a study _ought_ to make use of:
 
-| Model             | `--nlp-model`   | Azure | Bedrock | Local |
-|-------------------|-----------------|-------|---------|-------|
-| Claude Sonnet 4.5 | `claude-sonnet45` | ❌   | ✅       | ❌     |
-| Claude Sonnet 4.6 | `claude-sonnet46` | ❌   | ✅       | ❌     |
-| Claude Opus 4.8   | `claude-opus48` | ❌     | ✅       | ❌     |
-| GPT 5             | `gpt5`          | ✅     | ❌       | ❌     |
-| GPT 5.4           | `gpt54`         | ✅     | ❌       | ❌     |
-| GPT 5.4 mini      | `gpt54-mini`    | ✅     | ❌       | ❌     |
-| GPT 5.4 nano      | `gpt54-nano`    | ✅     | ❌       | ❌     |
-| GPT OSS 120b      | `gpt-oss-120b`  | ✅     | ✅       | ✅     |
-| Llama4 Scout      | `llama4-scout`  | ✅     | ✅       | ✅ (experimental) |
+| Model             | `--nlp-model`     | Azure | Bedrock | Local             |
+|-------------------|-------------------|-------|---------|-------------------|
+| Claude Sonnet 4.5 | `claude-sonnet45` | ❌    | ✅      | ❌                |
+| Claude Sonnet 4.6 | `claude-sonnet46` | ❌    | ✅      | ❌                |
+| Claude Opus 4.8   | `claude-opus48`   | ❌    | ✅      | ❌                |
+| GPT 5             | `gpt5`            | ✅    | ❌      | ❌                |
+| GPT 5.4           | `gpt54`           | ✅    | ❌      | ❌                |
+| GPT 5.4 mini      | `gpt54-mini`      | ✅    | ❌      | ❌                |
+| GPT 5.4 nano      | `gpt54-nano`      | ✅    | ❌      | ❌                |
+| GPT OSS 120b      | `gpt-oss-120b`    | ✅    | ✅      | ✅                |
+| Llama4 Scout      | `llama4-scout`    | ✅    | ✅      | ✅ (experimental) |
 
 Below are models that are technically supported but are on their way towards official deprecation:
 
-| Model             | `--nlp-model`   | Azure | Bedrock | Local |
-|-------------------|-----------------|-------|---------|-------|
-| GPT 3.5           | `gpt35`         | ✅     | ❌       | ❌     |
-| GPT 4             | `gpt4`          | ✅     | ❌       | ❌     |
-| GPT 4o            | `gpt4o`         | ✅     | ❌       | ❌     |
+| Model             | `--nlp-model`     | Azure | Bedrock | Local |
+|-------------------|-------------------|-------|---------|-------|
+| GPT 3.5           | `gpt35`           | ✅    | ❌      | ❌    |
+| GPT 4             | `gpt4`            | ✅    | ❌      | ❌    |
+| GPT 4o            | `gpt4o`           | ✅    | ❌      | ❌    |
 
 For which models support cheaper batch processing,
 see the [NLP workflow documentation](https://docs.smarthealthit.org/cumulus/library/workflows/nlp.html#supported-models).

@@ -11,13 +11,13 @@ nav_order: 1
 Let's work through an end-to-end NLP workflow, as if you were doing a real study.
 But we'll use an example study shipped with Cumulus Library for testing purposes instead.
 
-This will take us from the initial actual NLP, then to chart review,
+This will take us from running the NLP, then to chart review,
 then finally to analyzing accuracy.
 
 You don't need to prepare your own clinical notes for this run-through.
 We'll use synthetic notes shipped with Cumulus Library for this very purpose.
 
-This example study we'll use is just a very simple age range study.
+The example study is a very simple age range study.
 The NLP will only be tasked with extracting an age from a clinical note.
 
 To keep things simple, we'll build everything into a local DuckDB database
@@ -29,14 +29,22 @@ A real study would usually run against Athena, but the commands are nearly ident
 You'll need:
 - [Cumulus Library](https://docs.smarthealthit.org/cumulus/library/) installed
   (`pip install cumulus-library`)
-- A local checkout of the [Cumulus Library repository](https://github.com/smart-on-fhir/cumulus-library),
+- A local checkout of the 
+- [Cumulus Library repository](https://github.com/smart-on-fhir/cumulus-library),
   which holds the synthetic notes and the Docker file for local models
-- [Cumulus ETL](https://docs.smarthealthit.org/cumulus/etl/) set up, for the chart review step
+- A local checkout of the [Cumulus ETL repository](https://github.com/smart-on-fhir/cumulus-etl),
+  which holds the Docker Compose file we'll use to upload notes for chart review
+  (see the [ETL setup docs](https://docs.smarthealthit.org/cumulus/etl/) for more)
 
-For the rest of this guide, we'll assume your Cumulus Library checkout is at `~/cumulus-library`
-and refer to the example notes folder like so:
+For the rest of this guide, we'll assume your checkouts are at `~/cumulus-library` and 
+`~/cumulus-etl`.
+We'll also keep the files we create along the way (NLP results, chart review exports)
+in one working folder.
+Let's set up some shortcuts for those folders:
 ```sh
 export NOTES=~/cumulus-library/cumulus_library/studies/example_nlp/notes
+export WORK=/tmp/example
+mkdir -p $WORK
 ```
 
 ## The NLP Itself
@@ -76,13 +84,14 @@ export AZURE_OPENAI_API_KEY=xxx
 export AZURE_OPENAI_ENDPOINT=https://xxx.openai.azure.com/
 ```
 And you'll pass `--nlp-provider azure` below.
+If your Azure deployment isn't named `gpt-oss-120b`,
+also pass `--azure-deployment` with your deployment's name.
 
 #### Bedrock
 Make sure your AWS credentials can be found (for example, by setting `AWS_PROFILE`).
 And you'll pass `--nlp-provider bedrock` below.
 
 #### Local (On-Prem)
-For these, you'll need to start up the appropriate model on your machine:
 Start up the model on a machine with at least 80GB of GPU memory,
 from your Cumulus Library checkout:
 ```sh
@@ -156,10 +165,10 @@ the last stage already post-processed the extracted ages into clinically-relevan
 in the `example_nlp__range_labels` table.
 We'll compare those labels against a human review.
 
-Let's save those labels to a CSV file for later:
+Let's save those labels to a CSV file in our working folder for later:
 ```sh
 duckdb /tmp/example.duckdb \
-  "copy (select note_ref, label from example_nlp__range_labels) to 'gpt-oss.csv'"
+  "copy (select note_ref, label from example_nlp__range_labels) to '$WORK/gpt-oss.csv'"
 ```
 
 ## Human Chart Review
@@ -199,17 +208,26 @@ Enter the following template, which lists the possible labels for our example st
 ### Upload Your Notes
 
 Now you'll want to fill in your new project with the clinical notes the NLP looked at.
-Cumulus ETL's `upload-notes` command handles this.
-Take a note of the project number (in the project's URL) and replace the number below,
+This step is done with Cumulus ETL, not Cumulus Library,
+and it's a necessary one:
+Label Studio can't read FHIR notes directly,
+and the NLP results only point at notes by their anonymized IDs.
+Cumulus ETL's `upload-notes` command uses the codebook in your PHI folder
+to match those IDs back to the original notes,
+then sends the note text to Label Studio.
+
+Take a note of the project number (in the project's URL) and replace the `xx` below,
 along with the other arguments for your site.
 
 The `--select-by-csv` argument uses the CSV we saved above to pick out just the ten notes
 that went through NLP.
-Since our CSV file is in the current folder, we mount it into the Docker container with `-v`.
+We mount the working folder that holds that CSV into the Docker container with `-v`.
+Run this from your Cumulus ETL checkout, since that's where its Docker Compose file lives:
 ```sh
+cd ~/cumulus-etl
 docker compose run --rm \
   -v $NOTES:/notes \
-  -v $PWD:/csv \
+  -v $WORK:/csv \
   -v /tmp/example-phi:/phi \
   cumulus-etl upload-notes \
   /notes \
@@ -248,8 +266,8 @@ But first, let's gather up all our chart annotations.
 
 Let's download those Label Studio annotations you made.
 In Label Studio, click Export in the project and choose the default JSON format.
-Save this file as `labelstudio-export.json`, in the same folder as the `gpt-oss.csv` file
-we saved earlier.
+Save this file as `labelstudio-export.json` in your working folder (`$WORK`),
+next to the `gpt-oss.csv` file we saved earlier.
 
 That CSV holds the NLP's answers, which Label Studio doesn't know about.
 So with both files, you have everything you need.
@@ -259,7 +277,8 @@ So with both files, you have everything you need.
 Chart Review doesn't need much configuration,
 but you'll need to tell it where these exported NLP annotations are.
 
-Create a `config.yaml` file alongside the exported annotations, with the following contents:
+Create a `config.yaml` file in your working folder, alongside the exported annotations,
+with the following contents:
 ```yaml
 annotators:
   gpt-oss:
@@ -270,7 +289,7 @@ annotators:
 
 First, install the tool with `pipx install chart-review`.
 
-Then, in the same folder as the other files, run `chart-review` without any arguments.
+Then, from your working folder (`cd $WORK`), run `chart-review` without any arguments.
 You should see output similar to the following
 (these examples are from an earlier eight-note version of this study, so your numbers will differ):
 ```

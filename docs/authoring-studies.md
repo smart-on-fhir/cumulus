@@ -125,14 +125,14 @@ project for an approach based on prompt iteration for LLMs.
 
 #### Add an NLP workflow to your study
 
-To extract structured data from free-text clinical notes, cumulus studies define the 
-structure data they want to extract using Pydantic and JSON Schema representations. 
+To extract structured data from free-text clinical notes, cumulus studies define the
+structure data they want to extract using Pydantic and JSON Schema representations.
 Authors can find examples of these schemas in the
 [kidney transplant study](https://github.com/smart-on-fhir/cumulus-library-kidney-transplant/tree/main/cumulus_library_kidney_transplant/llm/schemas)
 and some building blocks for building your own in the
 [Cumulus Library documentation](https://docs.smarthealthit.org/cumulus/library/workflows/nlp-tables.html#writing-response-schemas-that-work-with-these-builders).
 
-Once you've got NLP schema and an LLM approach in mind, you can capture it in an
+Once you've got an NLP schema and an LLM approach in mind, you can capture it in an
 [NLP workflow](https://docs.smarthealthit.org/cumulus/library/workflows/nlp.html):
 a small config file in your study that holds your LLM prompt, the expected response format,
 and which notes to look at.

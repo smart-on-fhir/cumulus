@@ -28,9 +28,9 @@ Each study's design will have its own questions to ask of the notes,
 so each study defines its own prompts and its own expected answers.
 
 {: .note }
-Example: a infectious disease symptoms study might ask an LLM
+Example: an infectious disease symptoms study might ask an LLM
 "Does the patient in this clinical note have a fever?",
-while a chronic disease-specific study might ask "when was the disease first diagnosed".
+while a chronic disease-specific study might ask "When was the disease first diagnosed?"
 
 ### But With Re-Usable Workflows
 
@@ -48,7 +48,7 @@ Here's a basic outline of how Cumulus runs NLP for a study:
 3. Record the structured, extracted answers in a database table
 4. Use SQL to examine the extracted data along with structured FHIR data to determine study results
 
-Because Cumulus Library has a growing internal library of NLP support code
+Because Cumulus Library has a growing set of built-in NLP support code
 (things like automatically caching results, supporting different LLM providers like Azure and
 Bedrock, enforcing JSON schemas for responses, and batching requests to save money),
 the study-specific code can focus on the clinical logic.
@@ -82,7 +82,9 @@ and generate the JSON from that:
 from pydantic import BaseModel, Field
 
 class FeverMention(BaseModel):
-    has_fever: bool = Field(description="Whether the note says the patient has a fever")
+    has_fever: bool | None = Field(
+        description="Whether the patient has a fever, or None if the note doesn't say"
+    )
     spans: list[str] = Field(description="Exact quotes from the note that support the answer")
 ```
 
@@ -245,7 +247,7 @@ can then finally be displayed as digestible charts.
 
 And that's the lifecycle of a clinical note!
 It starts inside your EHR,
-flows through the ETL and into an LLM,
+flows through Cumulus Library and into an LLM,
 its findings end up in Athena,
 and counts of those findings get sent to & displayed in the Dashboard.
 
